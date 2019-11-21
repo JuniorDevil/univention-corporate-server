@@ -225,6 +225,7 @@ class TestConfigRegistry(unittest.TestCase):
 			sorted([('foo', (ConfigRegistry.FORCED, 'FORCED')), ('bar', (ConfigRegistry.FORCED, 'FORCED')), ('baz', (ConfigRegistry.NORMAL, 'NORMAL'))])
 		)
 
+	@unittest.skipIf(sys.version_info >= (3,), "removed in python3")
 	def test_iteritems(self):
 		"""Test merged items."""
 		ucr = self._setup_layers()
@@ -241,6 +242,7 @@ class TestConfigRegistry(unittest.TestCase):
 			sorted(['foo', 'bar', 'baz'])
 		)
 
+	@unittest.skipIf(sys.version_info >= (3,), "removed in python3")
 	def test_iterkeys(self):
 		"""Test merged keys."""
 		ucr = self._setup_layers()
@@ -257,6 +259,7 @@ class TestConfigRegistry(unittest.TestCase):
 			sorted(['FORCED', 'FORCED', 'NORMAL'])
 		)
 
+	@unittest.skipIf(sys.version_info >= (3,), "removed in python3")
 	def test_itervalues(self):
 		"""Test merged items."""
 		ucr = self._setup_layers()
@@ -357,8 +360,17 @@ class TestConfigRegistry(unittest.TestCase):
 		self.assertEqual(ucr.get('bar'), 'baz')
 		self.assertEqual(ucr.get('baz'), 'bar')
 
+
+class TestConfigRegistry2(unittest.TestCase):
+
+	"""Unit test for univention.config_registry.backend.ConfigRegistry
+	But without start up and tear down methods."""
+
 	def test_locking(self):
 		"""Test inter-process-locking."""
+		self.work_dir = tempfile.mkdtemp()
+		ConfigRegistry.PREFIX = self.work_dir
+		# Finish start up
 		delay = 1.0
 		ucr = ConfigRegistry()
 		read_end, write_end = os.pipe()
@@ -367,7 +379,7 @@ class TestConfigRegistry(unittest.TestCase):
 		if not pid1:  # child 1
 			os.close(read_end)
 			ucr.lock()
-			os.write(write_end, '1')
+			os.write(write_end, b'1')
 			time.sleep(delay)
 			ucr.unlock()
 			os._exit(0)
@@ -402,6 +414,8 @@ class TestConfigRegistry(unittest.TestCase):
 				self.fail('Unknown child status: %d, %x' % (pid, status))
 		else:
 			self.fail('Timeout')
+		# tear down
+		shutil.rmtree(self.work_dir)
 
 
 if __name__ == '__main__':

@@ -30,6 +30,7 @@
 # /usr/share/common-licenses/AGPL-3; if not, see
 # <https://www.gnu.org/licenses/>.
 from __future__ import print_function
+import io
 import sys
 import os
 import fcntl
@@ -510,15 +511,17 @@ class _ConfigRegistry(dict):
 		"""Load sub registry from file."""
 		import_failed = False
 		try:
-			reg_file = open(self.file, 'r')
+			reg_file = io.open(self.file, 'r', encoding='UTF-8')
 		except EnvironmentError:
 			import_failed = True
 		else:
 			import_failed = reg_file.readline() == '' and reg_file.readline() == ''
+			if import_failed:
+				reg_file.close()
 
 		if import_failed:
 			try:
-				reg_file = open(self.backup_file, 'r')
+				reg_file = io.open(self.backup_file, 'r')
 			except EnvironmentError:
 				return
 
@@ -574,7 +577,7 @@ class _ConfigRegistry(dict):
 				user = 0
 				group = 0
 			# open temporary file for writing
-			reg_file = open(temp_filename, 'w')
+			reg_file = io.open(temp_filename, 'w', encoding='UTF-8')
 			# write data to file
 			reg_file.write('# univention_ base.conf\n\n')
 			reg_file.write(self.__str__())
