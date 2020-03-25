@@ -64,6 +64,7 @@ Depends: ${python:Depends},
  univention-errata-level,
  apt-transport-https,
  ca-certificates,
+ python-six,
 Description: UCS Updater Python modules
  .
  This package is part of Univention Corporate Server (UCS),
@@ -86,6 +87,7 @@ Depends: ${python3:Depends},
  univention-errata-level,
  apt-transport-https,
  ca-certificates,
+ python3-six,
 Description: UCS Updater Python 3 modules
  .
  This package is part of Univention Corporate Server (UCS),
