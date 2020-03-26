@@ -1,21 +1,3 @@
-univention-pam (12.0.2-12) unstable; urgency=medium
-
-  * Bug #51224: fix lambda expression for python 3 compatibility
-
- -- Florian Best <best@univention.de>  Tue, 05 May 2020 15:30:02 +0200
-
-univention-pam (12.0.2-11) unstable; urgency=medium
-
-  * Bug #51027: code cleanup
-
- -- Florian Best <best@univention.de>  Fri, 27 Mar 2020 20:28:07 +0100
-
-univention-pam (12.0.2-10) unstable; urgency=medium
-
-  * Bug #51027: code cleanup
-
- -- Florian Best <best@univention.de>  Fri, 27 Mar 2020 17:20:55 +0100
-
 univention-pam (12.0.2-9) unstable; urgency=medium
 
   * Bug #51027: make UCR templates compatible to python3
