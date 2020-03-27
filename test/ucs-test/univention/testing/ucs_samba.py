@@ -213,6 +213,10 @@ def wait_for_s4connector(timeout=360, delta_t=1, s4cooldown_t=1):
 			'--basedn', '',
 			'highestCommittedUSN',
 		])
+
+		if six.PY3:
+			ldbresult = ldbresult.decode('UTF-8')
+
 		for line in ldbresult.split('\n'):
 			line = line.strip()
 			if line.startswith('highestCommittedUSN: '):
