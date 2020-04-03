@@ -30,7 +30,7 @@
 # /usr/share/common-licenses/AGPL-3; if not, see
 # <https://www.gnu.org/licenses/>.
 
-import ipaddr
+import ipaddress
 
 from univention.admin.layout import Tab, Group
 import univention.admin.filter
@@ -112,12 +112,13 @@ class object(DHCPBase):
 	def ready(self):
 		super(object, self).ready()
 
-		if ipaddr.IPv4Network('%(subnet)s/%(subnetmask)s' % self.info).network != ipaddr.IPv4Address('%(subnet)s' % self.info):
+		# Use ipaddress.IPv4Interface().network doesn't throw ValueError if host bits are set
+		subnet = ipaddress.IPv4Interface(u'%(subnet)s/%(subnetmask)s' % self.info).network
+		if subnet.network_address != ipaddress.IPv4Address(u'%(subnet)s' % self.info):
 			raise univention.admin.uexceptions.valueError(_('The subnet mask does not match the subnet.'), property='subnetmask')
 
-		subnet = ipaddr.IPNetwork('%(subnet)s/%(subnetmask)s' % self.info)
 		if self.hasChanged('range') or not self.exists():
-			# TODO: replace univention.admin.ipaddress.*() with ipaddr module
+			# TODO: replace univention.admin.ipaddress.*() with standard ipaddress module
 			for addresses in self['range']:
 				for addresses2 in self['range']:
 					if addresses != addresses2 and univention.admin.ipaddress.is_range_overlapping(addresses, addresses2):
@@ -130,7 +131,7 @@ class object(DHCPBase):
 					if univention.admin.ipaddress.ip_is_broadcast_address(self['subnet'], self['subnetmask'], addr):
 						raise univention.admin.uexceptions.rangeInBroadcastAddress('%s-%s' % (addresses[0], addresses[1]))
 
-					if ipaddr.IPAddress(addr) not in subnet:
+					if ipaddress.IPv4Address(addr) not in subnet:
 						raise univention.admin.uexceptions.rangeNotInNetwork(addr)
 
 	@staticmethod

@@ -30,7 +30,7 @@
 # /usr/share/common-licenses/AGPL-3; if not, see
 # <https://www.gnu.org/licenses/>.
 
-import ipaddr
+import ipaddress
 
 from univention.admin.layout import Tab, Group
 import univention.admin.filter
@@ -112,7 +112,9 @@ class object(DHCPBase):
 	def ready(self):
 		super(object, self).ready()
 
-		if ipaddr.IPv4Network('%(subnet)s/%(subnetmask)s' % self.info).network != ipaddr.IPv4Address('%(subnet)s' % self.info):
+		# Use ipaddress.IPv4Interface().network doesn't throw ValueError if host bits are set
+		subnet = ipaddress.IPv4Interface(u'%(subnet)s/%(subnetmask)s' % self.info).network
+		if subnet.network_address != ipaddress.IPv4Address(u'%(subnet)s' % self.info):
 			raise univention.admin.uexceptions.valueError(_('The subnet mask does not match the subnet.'), property='subnetmask')
 
 		# TODO: don't we need the range checks from dhcp/subnet here as well?!
