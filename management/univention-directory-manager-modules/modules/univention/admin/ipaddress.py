@@ -31,40 +31,11 @@
 
 from __future__ import absolute_import
 
-import socket
-import struct
+from ipaddress import IPv4Address, IPv4Network  # FIXME: Unfortunately this file is called the same as the Python module and even absolute_import above cannot make it work - doctest bewlow will NOT work! Therefore we should move the code in the 3 locations were it is used only.
 try:
 	from typing import Tuple  # noqa F401
 except ImportError:
 	pass
-
-
-def dotted2int(ds):
-	# type: (str) -> int
-	"""
-	Convert dotted-quad |IPv4| address to integer.
-
-	:param ds: An |IPv4| address in dotted-quad notation.
-	:returns: The numeric |IPv4| address.
-
-	>>> dotted2int('0.0.0.0')
-	0
-	"""
-	return struct.unpack('!I', socket.inet_aton(ds))[0]
-
-
-def int2dotted(i):
-	# type: (int) -> str
-	"""
-	Convert integer address to dotted-quad |IPv4| address.
-
-	:param i: A numeric |IPv4| address.
-	:returns: An |IPv4| address in dotted-quad notation.
-
-	>>> int2dotted(0)
-	'0.0.0.0'
-	"""
-	return socket.inet_ntoa(struct.pack('!I', i))
 
 
 def ip_plus_one(ip):
@@ -75,6 +46,9 @@ def ip_plus_one(ip):
 	:param ip: An |IPv4| address in dotted-quad notation.
 	:returns: An |IPv4| address in dotted-quad notation.
 
+	.. deprecated:: 4.4-4
+	   unused
+
 	>>> ip_plus_one('0.0.0.0')
 	'0.0.0.1'
 	>>> ip_plus_one('0.0.0.254')
@@ -82,77 +56,74 @@ def ip_plus_one(ip):
 	>>> ip_plus_one('0.0.0.255')
 	'0.0.1.1'
 	"""
-	newIp = int2dotted(dotted2int(ip) + 1)
-	last = newIp.split('.')[3]
-	if last == '255' or last == '0':
-		newIp = int2dotted(dotted2int(newIp) + 1)
-	return newIp
+	# WTF: this function seems to expect it's a /24 address?!
+	addr = IPv4Address(u'%s' % (ip,))
+	broadcast = IPv4Network(u'%s/24' % (ip,), strict=False).broadcast_address
+	if addr == broadcast:
+		addr += 1
+	addr += 1
+	if addr == broadcast:
+		addr += 1
+	return str(addr)
 
 
 def ip_is_in_network(subnet, subnetmask, ip):
-	# type: (str, str, str) -> int
+	# type: (str, str, str) -> bool
 	"""
 	Check if the given |IPv4| address is inside the given subnet.
 
 	:param subnet: A |IPv4| network address.
 	:param subnetmask: The |IPv4| network prefix length.
 	:param ip: The |IPv4| address to check.
-	:returns: `1` if the |IP| address is inside the subnet, `0` otherwise.
+	:returns: `True` if the |IP| address is inside the subnet, `False` otherwise.
+
+	.. deprecated:: 4.4-4
+	   Used in ../admin/handlers/__init__.py and ../admincli/admin.py only
 
 	>>> ip_is_in_network('192.0.2.0', 24, '192.0.2.42')
-	1
+	True
+	>>> ip_is_in_network('192.0.2.0', 24, '192.0.3.42')
+	False
 	"""
-	lip = struct.unpack('!I', socket.inet_aton(ip))[0] >> 32 - int(subnetmask)
-	lnet = struct.unpack('!I', socket.inet_aton(subnet))[0] >> 32 - int(subnetmask)
-	if lip == lnet:
-		return 1
-	return 0
+	return IPv4Address(u'%s' % (ip,)) in IPv4Network(u'%s/%s' % (subnet, subnetmask), strict=False)
 
 
 def ip_is_network_address(subnet, subnetmask, ip):
-	# type: (str, str, str) -> int
+	# type: (str, str, str) -> bool
 	"""
 	Check if the given |IPv4| address is the network address (host bits are all zero).
 
 	:param subnet: A |IPv4| network address.
 	:param subnetmask: The |IPv4| network prefix length.
 	:param ip: The |IPv4| address to check.
-	:returns: `1` if the |IP| address is the network address, `0` otherwise.
+	:returns: `True` if the |IP| address is the network address, `False` otherwise.
+
+	.. deprecated:: 4.4-4
+	   Used in handlers/dhcp/subnet.py only
 
 	>>> ip_is_network_address('192.0.2.0', 24, '192.0.2.0')
-	1
+	True
 	"""
-	network_address = struct.unpack('!I', socket.inet_aton(subnet))[0]
-	network_address = network_address >> 32 - int(subnetmask)
-	network_address = network_address << 32 - int(subnetmask)
-	ip_address = struct.unpack('!I', socket.inet_aton(ip))[0]
-	if network_address == ip_address:
-		return 1
-	return 0
+	return IPv4Address(u'%s' % (ip,)) == IPv4Network(u'%s/%s' % (subnet, subnetmask), strict=False).network_address
 
 
 def ip_is_broadcast_address(subnet, subnetmask, ip):
-	# type: (str, str, str) -> int
+	# type: (str, str, str) -> bool
 	"""
 	Check if the given |IPv4| address is the network broadcast address (host bits are all one).
 
 	:param subnet: The |IPv4| network address.
 	:param subnetmask: The |IPv4| network prefix length.
 	:param ip: The |IPv4| address to check.
-	:returns: `1` if the |IP| address is the network broadcast address, `0` otherwise.
+	:returns: `True` if the |IP| address is the network broadcast address, `False` otherwise.
+
+	.. deprecated:: 4.4-4
+	   Used in handlers/dhcp/subnet.py only
 
 	>>> ip_is_broadcast_address('192.0.2.0', 24, '192.0.2.255')
-	1
+	True
 	"""
-	network_address = struct.unpack('!I', socket.inet_aton(subnet))[0]
-	shiftbit = 1
-	for i in range(0, 32 - int(subnetmask)):
-		network_address = network_address ^ shiftbit
-		shiftbit = shiftbit << 1
-	ip_address = struct.unpack('!I', socket.inet_aton(ip))[0]
-	if network_address == ip_address:
-		return 1
-	return 0
+	return IPv4Address(u'%s' % (ip,)) == IPv4Network(u'%s/%s' % (subnet, subnetmask), strict=False).broadcast_address
 
 
 def ip_compare(ip1, ip2):
@@ -162,7 +133,10 @@ def ip_compare(ip1, ip2):
 
 	:param ip1: The first |IPv4| address.
 	:param ip2: The second |IPv4| address.
-	:returns: `1` if the first address is before the second, `-1` if the first is after the second, or `0` when they are equal.
+	:returns: `>0` if the first address is before the second, `<0` if the first is after the second, or `0` when they are equal.
+
+	.. deprecated:: 4.4-4
+	   unused
 
 	>>> ip_compare('192.0.2.1', '192.0.2.2')
 	1
@@ -171,63 +145,59 @@ def ip_compare(ip1, ip2):
 	>>> ip_compare('192.0.2.3', '192.0.2.2')
 	-1
 	"""
-	if not ip1:
-		return 1
-	if not ip2:
-		return -1
-
-	sip1 = ip1.split('.')
-	sip2 = ip2.split('.')
-	for i in range(0, 4):
-		if int(sip1[i]) > int(sip2[i]):
-			return -1
-		elif int(sip1[i]) < int(sip2[i]):
-			return 1
-
-	return 0
+	sip1, sip2 = (int(IPv4Address(u'%s' % (ip,))) if ip else 0 for ip in (ip1, ip2))
+	return sip2 - sip1
 
 
 def is_ip_in_range(ip, range):
-	# type: (str, Tuple[str, str]) -> int
+	# type: (str, Tuple[str, str]) -> bool
 	"""
 	Check if a |IPv4| address is inside the given range.
 
 	:param ip: The |IPv4| address to check.
 	:param range: The inclusive range as a 2-tuple (low, hight) of |IPv4| addresses.
-	:returns: `1` if the address is inside the range, `0` otherwise.
+	:returns: `True` if the address is inside the range, `False` otherwise.
+
+	.. deprecated:: 4.4-4
+	   used below
 
 	>>> is_ip_in_range('192.0.2.10', ('192.0.2.0', '192.0.2.255'))
-	1
+	True
+	>>> is_ip_in_range('192.0.3.10', ('192.0.2.0', '192.0.2.255'))
+	False
+	>>> is_ip_in_range('192.0.1.10', ('192.0.2.0', '192.0.2.255'))
+	False
 	"""
-	if int(ip_compare(ip, range[0])) < 1 and int(ip_compare(ip, range[1])) > -1:
-		return 1
-	else:
-		return 0
+	ip_, first, last = (IPv4Address(u'%s' % (addr,)) for addr in (ip, range[0], range[1]))
+	return first <= ip_ <= last
 
 
 def is_range_overlapping(range1, range2):
-	# type: (Tuple[str, str], Tuple[str, str]) -> int
+	# type: (Tuple[str, str], Tuple[str, str]) -> bool
 	"""
-	Check if two |IPv4| addresses overlap.
+	Check if two |IPv4| addresse ranges overlap.
 
 	:param range1: The first range as a 2-tuple (low, high) of |IPv4| addresses.
 	:param range2: The second range as a 2-tuple (low, high) of |IPv4| addresses.
-	:returns: `1` if the ranges overlap, `0` otherwise.
+	:returns: `True` if the ranges overlap, `False` otherwise.
+
+	.. deprecated:: 4.4-4
+	   Used in handlers/dhcp/subnet.py only
 
 	>>> is_range_overlapping(('192.0.2.0', '192.0.2.127'), ('192.0.2.128', '192.0.2.255'))
-	0
+	False
 	>>> is_range_overlapping(('192.0.2.0', '192.0.2.127'), ('192.0.2.64', '192.0.2.191'))
-	1
+	True
 	>>> is_range_overlapping(('192.0.2.0', '192.0.2.255'), ('192.0.2.64', '192.0.2.191'))
-	1
+	True
 	>>> is_range_overlapping(('192.0.2.128', '192.0.2.255'), ('192.0.2.64', '192.0.2.191'))
-	1
+	True
 	"""
 	if is_ip_in_range(range1[0], range2) or is_ip_in_range(range1[1], range2):
-		return 1
+		return True
 	if is_ip_in_range(range2[0], range1) or is_ip_in_range(range2[1], range1):
-		return 1
-	return 0
+		return True
+	return False
 
 
 if __name__ == '__main__':
