@@ -35,10 +35,9 @@ import ipaddress
 from univention.admin.layout import Tab, Group
 import univention.admin.filter
 import univention.admin.handlers
-import univention.admin.ipaddress
 import univention.admin.localization
 
-from .__common import DHCPBase, add_dhcp_options, rangeUnmap, rangeMap
+from .__common import DHCPBaseSubnet, add_dhcp_options, rangeUnmap, rangeMap
 
 translation = univention.admin.localization.translation('univention.admin.handlers.dhcp')
 _ = translation.translate
@@ -106,33 +105,8 @@ mapping.register('range', 'dhcpRange', rangeMap, rangeUnmap)
 add_dhcp_options(__name__)
 
 
-class object(DHCPBase):
+class object(DHCPBaseSubnet):
 	module = module
-
-	def ready(self):
-		super(object, self).ready()
-
-		# Use ipaddress.IPv4Interface().network doesn't throw ValueError if host bits are set
-		subnet = ipaddress.IPv4Interface(u'%(subnet)s/%(subnetmask)s' % self.info).network
-		if subnet.network_address != ipaddress.IPv4Address(u'%(subnet)s' % self.info):
-			raise univention.admin.uexceptions.valueError(_('The subnet mask does not match the subnet.'), property='subnetmask')
-
-		if self.hasChanged('range') or not self.exists():
-			# TODO: replace univention.admin.ipaddress.*() with standard ipaddress module
-			for addresses in self['range']:
-				for addresses2 in self['range']:
-					if addresses != addresses2 and univention.admin.ipaddress.is_range_overlapping(addresses, addresses2):
-						raise univention.admin.uexceptions.rangesOverlapping('%s-%s; %s-%s' % (addresses[0], addresses[1], addresses2[0], addresses2[1]))
-
-				for addr in addresses:
-					if univention.admin.ipaddress.ip_is_network_address(self['subnet'], self['subnetmask'], addr):
-						raise univention.admin.uexceptions.rangeInNetworkAddress('%s-%s' % (addresses[0], addresses[1]))
-
-					if univention.admin.ipaddress.ip_is_broadcast_address(self['subnet'], self['subnetmask'], addr):
-						raise univention.admin.uexceptions.rangeInBroadcastAddress('%s-%s' % (addresses[0], addresses[1]))
-
-					if ipaddress.IPv4Address(addr) not in subnet:
-						raise univention.admin.uexceptions.rangeNotInNetwork(addr)
 
 	@staticmethod
 	def unmapped_lookup_filter():

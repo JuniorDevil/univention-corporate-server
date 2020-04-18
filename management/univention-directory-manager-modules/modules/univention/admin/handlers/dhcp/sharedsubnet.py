@@ -37,7 +37,7 @@ import univention.admin.filter
 import univention.admin.handlers
 import univention.admin.localization
 
-from .__common import DHCPBase, add_dhcp_options, rangeUnmap, rangeMap
+from .__common import DHCPBaseSubnet, add_dhcp_options, rangeUnmap, rangeMap
 
 translation = univention.admin.localization.translation('univention.admin.handlers.dhcp')
 _ = translation.translate
@@ -106,18 +106,8 @@ mapping.register('broadcastaddress', 'univentionDhcpBroadcastAddress', None, uni
 add_dhcp_options(__name__)
 
 
-class object(DHCPBase):
+class object(DHCPBaseSubnet):
 	module = module
-
-	def ready(self):
-		super(object, self).ready()
-
-		# Use ipaddress.IPv4Interface().network doesn't throw ValueError if host bits are set
-		subnet = ipaddress.IPv4Interface(u'%(subnet)s/%(subnetmask)s' % self.info).network
-		if subnet.network_address != ipaddress.IPv4Address(u'%(subnet)s' % self.info):
-			raise univention.admin.uexceptions.valueError(_('The subnet mask does not match the subnet.'), property='subnetmask')
-
-		# TODO: don't we need the range checks from dhcp/subnet here as well?!
 
 
 lookup_filter = object.lookup_filter
