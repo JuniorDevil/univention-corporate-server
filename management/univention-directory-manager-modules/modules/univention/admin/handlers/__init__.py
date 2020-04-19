@@ -1465,8 +1465,8 @@ class simpleLdap(object):
 		return ml
 
 	def _move_in_subordinates(self, olddn):
-		result = self.lo.search(base=self.lo.base, filter=filter_format(u'(&(objectclass=person)(secretary=%s))', [olddn]), attr=['dn'])
-		for subordinate, attr in result:
+		result = self.lo.searchDn(base=self.lo.base, filter=filter_format(u'(&(objectclass=person)(secretary=%s))', [olddn]))
+		for subordinate in result:
 			self.lo.modify(subordinate, [('secretary', olddn.encode('utf-8'), self.dn.encode('utf-8'))])
 
 	def _move_in_groups(self, olddn):
@@ -2057,8 +2057,7 @@ class simpleComputer(simpleLdap):
 				self.old_network = self['network']
 
 			# get groupmembership
-			result = self.lo.search(base=self.lo.base, filter=filter_format('(&(objectclass=univentionGroup)(uniqueMember=%s))', [self.dn]), attr=['dn'])
-			self['groups'] = [(x[0]) for x in result]
+			self['groups'] = self.lo.searchDn(base=self.lo.base, filter=filter_format('(&(objectclass=univentionGroup)(uniqueMember=%s))', [self.dn]))
 
 		if 'name' in self.info and 'domain' in self.info:
 			self.info['fqdn'] = '%s.%s' % (self['name'], self['domain'])
@@ -2326,7 +2325,7 @@ class simpleComputer(simpleLdap):
 				return
 
 			# check if the object exists
-			results = self.lo.search(base=tmppos.getBase(), scope='domain', attr=['dn'], filter=filter_format('(&(relativeDomainName=%s)(%s=%s))', [ipPart] + list(str2dn(zoneDn)[0][0][:2])), unique=False)
+			results = self.lo.searchDn(base=tmppos.getBase(), scope='domain', filter=filter_format('(&(relativeDomainName=%s)(%s=%s))', [ipPart] + list(str2dn(zoneDn)[0][0][:2])), unique=False)
 			if not results:
 				self.lo.add('relativeDomainName=%s,%s' % (escape_dn_chars(ipPart), zoneDn), [
 					('objectClass', [b'top', b'dNSZone', b'univentionObject']),
