@@ -170,7 +170,7 @@ class Support(object):
 					# found dNSZone
 					filter = '(&(objectClass=univentionHost)'
 					for aRecord in res[0][1]['aRecord']:
-						filter += filter_format('(aRecord=%s)', [aRecord])
+						filter += filter_format('(aRecord=%s)', [aRecord.decode('ASCII')])
 					filter += filter_format('(cn=%s))', [relDomainName])
 					res = self.lo.search(filter)
 					if res:
@@ -190,9 +190,9 @@ class Support(object):
 				domain = self.lo.getAttr(parentdn, 'associatedDomain')
 				cn = self.lo.getAttr(parentdn, 'cn')
 				if not domain:
-					domain = [configRegistry.get("domainname")]
+					domain = [configRegistry.get("domainname").encode('UTF-8')]
 				if cn and domain:
-					parentlist.append('.'.join((cn[0], domain[0])).encode('UTF-8'))
+					parentlist.append(b'.'.join((cn[0], domain[0])))
 			ml.insert(0, ('univentionNagiosParent', self.oldattr.get('univentionNagiosParent', []), parentlist))
 
 	def nagios_ldap_modlist(self, ml):
@@ -239,7 +239,7 @@ class Support(object):
 				newmembers = copy.deepcopy(oldmembers)
 				newmembers.remove(oldfqdn)
 				newmembers.append(newfqdn)
-				self.lo.modify(servicedn, [('univentionNagiosHostname', oldmembers, newmembers)])
+				self.lo.modify(servicedn, [('univentionNagiosHostname', oldmembers, newmembers)])  # TODO: why not simply ('univentionNagiosHostname', oldfqdn, newfqdn) ?
 
 	def nagiosModifyServiceList(self):
 		fqdn = ''
@@ -267,7 +267,7 @@ class Support(object):
 			for servicedn in self.oldinfo.get('nagiosServices', []):
 				if servicedn not in self.info.get('nagiosServices', []):
 					oldmembers = self.lo.getAttr(servicedn, 'univentionNagiosHostname')
-					newmembers = filter(lambda x: x.lower() != fqdn.lower(), oldmembers)
+					newmembers = [x for x in oldmembers if x.decode('UTF-8').lower() != fqdn.lower()]
 					self.lo.modify(servicedn, [('univentionNagiosHostname', oldmembers, newmembers)])
 
 		if 'nagios' in self.options:
@@ -282,7 +282,7 @@ class Support(object):
 					# option nagios was freshly enabled or service has been enabled just now
 					oldmembers = self.lo.getAttr(servicedn, 'univentionNagiosHostname')
 					newmembers = copy.deepcopy(oldmembers)
-					newmembers.append(fqdn)
+					newmembers.append(fqdn.encode('UTF-8'))
 					ud.debug(ud.ADMIN, ud.WARN, 'nagios.py: NMSL: oldmembers: %s' % oldmembers)
 					ud.debug(ud.ADMIN, ud.WARN, 'nagios.py: NMSL: newmembers: %s' % newmembers)
 					self.lo.modify(servicedn, [('univentionNagiosHostname', oldmembers, newmembers)])
@@ -297,9 +297,8 @@ class Support(object):
 				base=self.position.getDomain(), attr=['univentionNagiosHostname'])
 
 			for (dn, attrs) in searchResult:
-				oldattrs = attrs['univentionNagiosHostname']
-				newattrs = filter(lambda x: x.lower() != fqdn.lower(), attrs['univentionNagiosHostname'])
-				self.lo.modify(dn, [('univentionNagiosHostname', oldattrs, newattrs)])
+				newattrs = [x for x in attrs['univentionNagiosHostname'] if x.decode('UTF-8').lower() != fqdn.lower()]
+				self.lo.modify(dn, [('univentionNagiosHostname', attrs['univentionNagiosHostname'], newattrs)])
 
 	def nagiosRemoveHostFromParent(self):
 		self.nagiosRemoveFromParent = False
@@ -312,9 +311,8 @@ class Support(object):
 				base=self.position.getDomain(), attr=['univentionNagiosParent'])
 
 			for (dn, attrs) in searchResult:
-				oldattrs = attrs['univentionNagiosParent']
-				newattrs = filter(lambda x: x.lower() != fqdn.lower(), attrs['univentionNagiosParent'])
-				self.lo.modify(dn, [('univentionNagiosParent', oldattrs, newattrs)])
+				newattrs = [x for x in attrs['univentionNagiosParent'] if x.decode('UTF-8').lower() != fqdn.lower()]
+				self.lo.modify(dn, [('univentionNagiosParent', attrs['univentionNagiosParent'], newattrs)])
 
 	def nagios_ldap_post_modify(self):
 		if self.nagiosRemoveFromServices:
