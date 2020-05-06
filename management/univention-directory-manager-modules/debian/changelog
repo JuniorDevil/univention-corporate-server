@@ -1,3 +1,9 @@
+univention-directory-manager-modules (14.1.1-1) unstable; urgency=medium
+
+  * Bug #50648: Migrate Simple UDM API
+
+ -- Dirk Wiesenthal <wiesenthal@univention.de>  Wed, 06 May 2020 17:35:24 +0200
+
 univention-directory-manager-modules (14.0.15-4) unstable; urgency=medium
 
   * Bug #51184: Fix DnListPropertyEncoder to return proper values when the
