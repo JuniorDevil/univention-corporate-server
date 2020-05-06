@@ -114,7 +114,8 @@ Description: UCS - Modules for administration tools
 Package: univention-directory-manager-tools
 Architecture: all
 Depends: ${misc:Depends},
- python-univention-directory-manager (= ${binary:Version})
+ python-univention-directory-manager (= ${binary:Version}),
+ python3-univention-directory-manager (= ${binary:Version})
 Description: UCS - Command-line based administration tools
  This package contains command-line based programs to
  manage UCS.
