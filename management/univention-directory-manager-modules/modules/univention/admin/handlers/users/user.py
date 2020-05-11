@@ -1015,7 +1015,7 @@ load_certificate.ATTR = {
 def mapHomePostalAddress(old, encoding=()):
 	new = []
 	for i in old:
-		new.append(b'$'.join(i.encode(*encoding)))
+		new.append(u'$'.join(i).encode(*encoding))
 	return new
 
 
