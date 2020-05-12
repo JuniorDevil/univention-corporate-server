@@ -108,6 +108,21 @@ def parse():
 		action='store', dest='bindpwdfile',
 		help='bind password file')
 
+	parser.add_argument(
+		'zone',
+		help='name of the DNS zone',
+	)
+	parser.add_argument(
+		'command',
+		choices=['add', 'remove'],
+		help='command',
+	)
+	parser.add_argument(
+		'typ',
+		choices=['srv', 'txt', 'ns', 'ptr', 'cname', 'a', 'zone'],
+		help='dns record type',
+	)
+
 	(options, args) = parser.parse_known_args()
 	msg = None
 	if options.bindpwdfile:
@@ -120,12 +135,7 @@ def parse():
 		ud.debug(ud.ADMIN, ud.ERROR, msg)
 		parser.error(msg)
 
-	try:
-		zone_name, command, typ = args[0:3]
-	except ValueError:
-		parser.error('Missing command or value. See --help.')
-
-	return options, zone_name, command, typ, args[3:]
+	return options, options.zone, options.command, options.typ, args
 
 
 def bind():

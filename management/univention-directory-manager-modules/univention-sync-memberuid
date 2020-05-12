@@ -54,7 +54,7 @@ def main():
 	configRegistry = univention.config_registry.ConfigRegistry()
 	configRegistry.load()
 
-	parser = ArgumentParser(usage="usage: %prog [options]")
+	parser = ArgumentParser()
 	parser.add_argument(
 		'-t', '--test', action='store_true',
 		dest='test', default=False, help='just test the modification')
