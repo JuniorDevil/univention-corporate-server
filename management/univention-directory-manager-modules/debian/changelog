@@ -1,3 +1,9 @@
+univention-directory-manager-modules (14.1.1-4) unstable; urgency=medium
+
+  * Bug #50648: Encoding in Simple UDM API
+
+ -- Dirk Wiesenthal <wiesenthal@univention.de>  Tue, 12 May 2020 11:40:43 +0200
+
 univention-directory-manager-modules (14.1.1-3) unstable; urgency=medium
 
   * Bug #50648: Migrate univention-sync-memberuid
