@@ -40,7 +40,7 @@ import univention.config_registry
 import univention.admin.modules
 import univention.admin.objects
 import univention.admin.uexceptions
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 import univention.debug as ud
 
@@ -121,9 +121,9 @@ def main():
 
 	basedn = configRegistry['ldap/base']
 
-	parser = OptionParser()
+	parser = ArgumentParser()
 	parser.add_option("-v", "--verbose", help="print debug output", dest="verbose", action="store_true")
-	(options, args) = parser.parse_args()
+	options = parser.parse_args()
 
 	univention.admin.modules.update()
 	lo, position = get_ldap_connection(basedn)

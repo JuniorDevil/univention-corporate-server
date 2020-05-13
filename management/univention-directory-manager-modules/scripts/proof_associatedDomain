@@ -35,10 +35,9 @@
 from __future__ import print_function
 import sys
 import univention.admin.uldap as uldap
-from optparse import OptionParser
+from argparse import ArgumentParser
 
-usage = '''
-%prog [-v] [-a] [-c]
+description = '''
 
 Script will only add missing associatedDomain with [-a]
 without that missing Attributes will only be shown
@@ -46,11 +45,11 @@ without that missing Attributes will only be shown
 Use -v to also get a list of computer objects, which have multiple
 DNSZones and so cannot be associated to one asscoiatedDomain entry
 '''
-parser = OptionParser(usage)
-parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help=("print more output"))
-parser.add_option("-a", "--auto-add", action="store_true", dest="auto_add", help=("automatically add missing associatedDomain"))
-parser.add_option("-c", "--complete-search", action="store_true", dest="complete_search", help=("search complete ldap for computer objects"))
-(options, args) = parser.parse_args()
+parser = ArgumentParser(description=description)
+parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help=("print more output"))
+parser.add_argument("-a", "--auto-add", action="store_true", dest="auto_add", help=("automatically add missing associatedDomain"))
+parser.add_argument("-c", "--complete-search", action="store_true", dest="complete_search", help=("search complete ldap for computer objects"))
+options = parser.parse_args()
 
 lo, position = uldap.getAdminConnection()
 ldap_base = position.getBase()

@@ -85,5 +85,5 @@ for forward_zone in forward_zones:
 				srv_record['location'] = location
 
 				# Change the objects
-				print 'Modify: %s' % srv_record.dn
+				print('Modify: %s' % srv_record.dn)
 				srv_record.modify()
